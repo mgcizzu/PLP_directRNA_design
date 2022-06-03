@@ -13,7 +13,7 @@ LONG_DESCRIPTION = 'Package to design Padlock probes based on a reference transc
 
 # Setting up
 setup(
-    name="PLP_directRNA_desing",
+    name="PLP_directRNA_design",
     version=VERSION,
     author="Sergio Marco Salas",
     author_email="<sergiomarco.salas@scilifelab.se>",
