@@ -1,3 +1,3 @@
-from bin.PLP_design import (extractseq,extract_seqs,findtargets,plot_alignment,
+from PLP_directRNA_design.PLP_design import (extractseq,extract_seqs,findtargets,plot_alignment,
 extract_and_align,retrieve_targets,select_sequences,check_plps,build_plps,extract_align_variants,
 plot_alignment_of_variants,extract_seqs_for_variants)
