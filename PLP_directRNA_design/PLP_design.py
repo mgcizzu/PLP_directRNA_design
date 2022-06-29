@@ -1,3 +1,4 @@
+
 def extractseq(goi,ref):
     import pandas as pd 
     from pandas import DataFrame
@@ -66,7 +67,7 @@ def extract_seqs(genes,ref,column='Gene'):
     
     return(genesexp,listo,lista)
 
-def findtargets (mrna,refpath,ie,outfiles,plp_length=30,gc_min=50,gc_max=65):
+def findtargets (mrna,refpath,ie,outfiles,plp_length=30,gc_min=50,gc_max=65): #50-65
     import pandas as pd 
     from pandas import DataFrame
     import Bio
@@ -93,7 +94,10 @@ def findtargets (mrna,refpath,ie,outfiles,plp_length=30,gc_min=50,gc_max=65):
                     if mrna.seq[i:i+plp_length].count("AAA")==0 and mrna.seq[i:i+plp_length].count("TTT")==0 and mrna.seq[i:i+plp_length].count("GGG")==0 and mrna.seq[i:i+plp_length].count("CCC")==0:
                     #Here I create a dataframe with all the suitable targets, where column 1 is the start position and column 2 is the actual sequence.
                         #print (GC(mrna.seq[i:i+30]))
-                        targets = targets.append({'Gene': mrna.id, 'Position': i, 'Sequence':mrna.seq[i:i+plp_length]}, ignore_index=True)  
+                        #targets = targets.append({'Gene': mrna.id, 'Position': i, 'Sequence':mrna.seq[i:i+plp_length]}, ignore_index=True)  
+                        newtargetD = ({'Gene': [mrna.id], 'Position': [i], 'Sequence':[mrna.seq[i:i+plp_length]]})  
+                        newtargetDF=pd.DataFrame(newtargetD)
+                        targets=pd.concat ([targets,newtargetDF])
                         pato=refpath+ '/target_regions_'+mrna.id+'_'+str(ie)+'.csv'
                         outfiles.append(pato)
                         targets.to_csv(pato)
@@ -386,9 +390,12 @@ def build_plps(path,specific_seqs_final,L_probe_library,plp_length,how='start',o
         gene_names_ID = pd.DataFrame(columns=gene_names_ID_columns)
         ID=on
         sbh=pd.read_csv(L_probe_library)
+        sbh[['useless', 'number']] = sbh['Lbar_ID'].str.split('_', expand=True)
+        sbh.drop(['useless'], axis=1)
+        sbh['number'] = sbh['number'].str.replace('^0', '', regex=True)
         n=0
         for g in gname:
-            gene_names_ID = gene_names_ID.append({"gene": g, "idseq" : np.array(sbh.loc[sbh['number']==ID+n,'ID_Seq'])[0], "Lbar_ID" : str(np.array(sbh.loc[sbh['number']==ID+n,'Lbar_ID'])[0]), "AffyID" : np.array(sbh.loc[sbh['number']==ID+n,'L_Affy_ID'])[0] }, ignore_index=True)
+            gene_names_ID = gene_names_ID.append({"gene": g, "idseq" : np.array(sbh.loc[sbh['number']==str(ID+n),'ID_Seq'])[0], "Lbar_ID" : str(np.array(sbh.loc[sbh['number']==str(ID+n),'Lbar_ID'])[0]), "AffyID" : np.array(sbh.loc[sbh['number']==str(ID+n),'L_Affy_ID'])[0] }, ignore_index=True)
             n=n+1
         gene_names_ID2=gene_names_ID.set_index("gene", drop = False)
         dictiocodes=dict(zip(sbh['L_Affy_ID'],sbh['Barcode_Combi']))
@@ -406,9 +413,12 @@ def build_plps(path,specific_seqs_final,L_probe_library,plp_length,how='start',o
         gene_names_ID = pd.DataFrame(columns=gene_names_ID_columns)
         ID=on-len(gname)
         sbh=pd.read_csv(L_probe_library)
+        sbh[['useless', 'number']] = sbh['Lbar_ID'].str.split('_', expand=True)
+        sbh.drop(['useless'], axis=1)
+        sbh['number'] = sbh['number'].str.replace('^0', '', regex=True)
         n=0
         for g in gname:
-            gene_names_ID = gene_names_ID.append({"gene": g, "idseq" : np.array(sbh.loc[sbh['number']==ID+n,'ID_Seq'])[0], "Lbar_ID" : str(np.array(sbh.loc[sbh['number']==ID+n,'Lbar_ID'])[0]), "AffyID" : np.array(sbh.loc[sbh['number']==ID+n,'L_Affy_ID'])[0] }, ignore_index=True)
+            gene_names_ID = gene_names_ID.append({"gene": g, "idseq" : np.array(sbh.loc[sbh['number']==str(ID+n),'ID_Seq'])[0], "Lbar_ID" : str(np.array(sbh.loc[sbh['number']==str(ID+n),'Lbar_ID'])[0]), "AffyID" : np.array(sbh.loc[sbh['number']==str(ID+n),'L_Affy_ID'])[0] }, ignore_index=True)
             n=n+1
         gene_names_ID2=gene_names_ID.set_index("gene", drop = False)
         dictiocodes=dict(zip(sbh['L_Affy_ID'],sbh['Barcode_Combi']))
@@ -570,6 +580,8 @@ def extract_align_variants(genes,ref,path,pathclustal,selection):
     return genesexp,listo,lista
 
 
+
+
 def plot_alignment_of_variants(refpath,freqseq,alignment):
     import pandas as pd 
     import Bio
@@ -584,7 +596,12 @@ def plot_alignment_of_variants(refpath,freqseq,alignment):
     from Bio import AlignIO
     import random
     import numpy as np
-    colors=['r','b','g','c','o','p','y','r','b','g','c','o','r','b','g','c','o','r','b','g','c','o','r','b','g','c','o','p','y','r','b','g','c','o','r','b','g','c','o','r','b','g','c','o']
+    from random import randint
+    colors = []
+    for i in range(50):
+        colors.append('#%06X' % randint(0, 0xFFFFFF))
+    #colors=['r','b','g','c','m','p','y','r','b','g','c','m','r','b','g','c','m','r','b','g','c','m','r','b','g','c','m','r','y','r','b','g','c','m','r','b','g','c','m','r','b','g','c','m']
+    
     fig, ax = plt.subplots(figsize=(10,(5*(np.size(freqseq,axis=0)))),nrows=np.size(freqseq,axis=0),ncols=1)  
     for s in range(0,np.size(freqseq,axis=0)):
         ax[s].plot(range(0,alignment.get_alignment_length()),freqseq[s,:],c=colors[s])
@@ -700,3 +717,28 @@ def extract_seqs_for_variants(path,genesexp,listo,lista,ref,pathclustal):
     hits=dict(zip(genesexp,lista))
     selected['exp_hits']=selected['Gene'].map(hits)
     return selected,unigene,notfound
+
+def map_sequences(selected,subgroup=1):
+    kmers =list(selected['Sequence'])
+    transcriptome = (ref)
+    seqlist = []
+    hitlist = []
+    lenlist = []
+    s=0
+    for sequence in kmers:
+        #print (sequence)
+        s=s+1
+        print ('Looking for sequence ('+str(s)+'/'+str(len(kmers))+'): '+sequence + ' allowing ' + str(mismatches) + ' mismatches')
+        output= !cutadapt -j 0 -a $sequence --overlap 30 --untrimmed-output /dev/null $transcriptome --no-indels -e $mismatches --action=retain 
+        #output= !C:/Users/sergio.salas/Downloads/cutadapt-3.4.exe -a $sequence --overlap 30 $transcriptome --no-indels -e $mismatches --action=retain --untrimmed-output C:\Users\sergio.salas\Downloads\here  
+        n=0
+        c2 = [line for line in output if line[0:1] == '>' and 'PREDICTED'not in line]
+        print ('Found '+str(len(c2))+' hits')
+        seqlist.append (sequence)
+        hitlist.append (c2)
+        lenlist.append (len(c2))
+    expoutput = pd.DataFrame(list(zip(seqlist, hitlist, lenlist)),
+                   columns =['sequence_with_Ns', 'hits', 'number_of_hits'])
+    bcf_all=pd.concat([selected.reset_index(),expoutput],axis=1)
+    bcf_all.to_csv(path+'mapped_sequences'+str(subgroup)+'.csv')
+    return bcf_all
